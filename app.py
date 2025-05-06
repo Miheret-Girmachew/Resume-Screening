@@ -10,23 +10,19 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.multiclass import OneVsRestClassifier
 
-# Download NLTK data
 nltk.download('stopwords')
 nltk.download('punkt')
 
-# -------------------------
-# Helper Functions
-# -------------------------
 
 def clean_resume(text):
     """Clean resume text by removing URLs, punctuation, and non-ASCII characters."""
-    text = re.sub(r'http\S+', ' ', text)  # remove URLs
-    text = re.sub(r'RT|cc', ' ', text)     # remove RT and cc
-    text = re.sub(r'#\S+', '', text)       # remove hashtags
-    text = re.sub(r'@\S+', ' ', text)      # remove mentions
-    text = re.sub(r'[%s]' % re.escape(string.punctuation), ' ', text)  # remove punctuation
-    text = re.sub(r'[^\x00-\x7f]', r' ', text)  # remove non-ASCII characters
-    text = re.sub(r'\s+', ' ', text)       # remove extra whitespace
+    text = re.sub(r'http\S+', ' ', text)  
+    text = re.sub(r'RT|cc', ' ', text)    
+    text = re.sub(r'#\S+', '', text)      
+    text = re.sub(r'@\S+', ' ', text)     
+    text = re.sub(r'[%s]' % re.escape(string.punctuation), ' ', text) 
+    text = re.sub(r'[^\x00-\x7f]', r' ', text) 
+    text = re.sub(r'\s+', ' ', text)     
     return text.strip()
 
 def extract_text_from_pdf(pdf_file):
@@ -55,20 +51,16 @@ def train_model(df):
     if df.empty:
         return None, None, None
 
-    # Clean resumes from the training data
     df['cleaned_resume'] = df['Resume'].apply(clean_resume)
 
-    # Encode the categorical labels
     le = LabelEncoder()
     df['Category_encoded'] = le.fit_transform(df['Category'])
 
-    # Initialize and fit the TF-IDF vectorizer
     vectorizer = TfidfVectorizer(sublinear_tf=True, stop_words='english', max_features=1500)
     vectorizer.fit(df['cleaned_resume'])
     X = vectorizer.transform(df['cleaned_resume'])
     y = df['Category_encoded']
 
-    # Train a simple One-vs-Rest classifier with KNeighborsClassifier
     clf = OneVsRestClassifier(KNeighborsClassifier())
     clf.fit(X, y)
 
@@ -82,13 +74,8 @@ def predict_candidate_resume(resume_text, vectorizer, clf, le):
     predicted_category = le.inverse_transform(prediction)
     return predicted_category[0]
 
-# -------------------------
-# Streamlit UI
-# -------------------------
-
 st.title("Resume Screening Application (PDF Upload)")
 
-# Sidebar for Job Posting Details
 st.sidebar.header("Job Posting Details")
 job_category = st.sidebar.selectbox(
     "Select the Job Category",
@@ -106,22 +93,16 @@ st.sidebar.write("Selected Job Category:", job_category)
 st.header("Candidate Resume Screening")
 st.write("Upload a PDF file containing the candidate resume.")
 
-# Option to either upload a PDF file or enter resume text manually
 upload_option = st.radio("How would you like to provide candidate resumes?", 
                           ("Upload PDF File", "Enter Text"))
 
-# -------------------------
-# Train the Model (using the training dataset)
-# -------------------------
 training_data = load_training_data()
 if not training_data.empty:
     vectorizer, clf, le = train_model(training_data)
 else:
     vectorizer, clf, le = None, None, None
 
-# -------------------------
-# Upload Option: PDF File
-# -------------------------
+
 if upload_option == "Upload PDF File":
     uploaded_pdf = st.file_uploader("Choose a PDF file", type="pdf")
     if uploaded_pdf is not None:
@@ -138,9 +119,7 @@ if upload_option == "Upload PDF File":
         else:
             st.error("Model is not trained. Please ensure the training dataset is available.")
 
-# -------------------------
-# Upload Option: Manual Text Entry
-# -------------------------
+
 else:
     candidate_resume_text = st.text_area("Enter Candidate Resume Text")
     if st.button("Screen Candidate"):
@@ -158,3 +137,9 @@ else:
             st.warning("Please enter a resume text.")
 
 st.write("**Note:** This demo uses a simple ML pipeline to classify resumes. In production, you might further tune the model and enhance the UI.")
+
+
+# source venv/Scripts/activate
+# pip install -r requirements.txt
+# python data_analysis.py
+# streamlit run app.py
