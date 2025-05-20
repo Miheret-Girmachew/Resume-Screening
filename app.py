@@ -163,8 +163,8 @@ if clf and word_vectorizer and le and st.session_state.get('_streamlit_nltk_setu
             with st.spinner("Extracting text from PDF..."):
                 candidate_resume_text = extract_text_from_pdf(uploaded_pdf)
             if candidate_resume_text:
-                st.subheader("Extracted Resume Text (First 500 characters):")
-                st.text_area("Resume Content", candidate_resume_text[:500] + "...", height=150, disabled=True)
+                st.subheader("Extracted Resume Text (First 2000 characters):")
+                st.text_area("Resume Content", candidate_resume_text[:2000] + "...", height=500, disabled=True)
             else:
                 st.error("Could not extract text from the PDF.")
     else: 
